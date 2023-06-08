@@ -59,7 +59,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"golang.org/x/mod/module"
+	"golang.org/x/mod/v2/module"
 )
 
 const (
