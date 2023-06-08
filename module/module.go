@@ -113,6 +113,9 @@ type Version struct {
 	// Path is a module path, like "golang.org/x/text" or "rsc.io/quote/v2".
 	Path string
 
+	// ModFilename specifies the name of the module file, defaults to go.mod
+	ModFilename string
+
 	// Version is usually a semantic version in canonical form.
 	// There are three exceptions to this general rule.
 	// First, the top-level target of a build has no specific version
@@ -135,22 +138,24 @@ func (m Version) String() string {
 
 // A ModuleError indicates an error specific to a module.
 type ModuleError struct {
-	Path    string
-	Version string
-	Err     error
+	Path        string
+	ModFilename string
+	Version     string
+	Err         error
 }
 
 // VersionError returns a ModuleError derived from a Version and error,
 // or err itself if it is already such an error.
 func VersionError(v Version, err error) error {
 	var mErr *ModuleError
-	if errors.As(err, &mErr) && mErr.Path == v.Path && mErr.Version == v.Version {
+	if errors.As(err, &mErr) && mErr.Path == v.Path && mErr.Version == v.Version && mErr.ModFilename == v.ModFilename {
 		return err
 	}
 	return &ModuleError{
-		Path:    v.Path,
-		Version: v.Version,
-		Err:     err,
+		Path:        v.Path,
+		ModFilename: v.ModFilename,
+		Version:     v.Version,
+		Err:         err,
 	}
 }
 
@@ -158,10 +163,16 @@ func (e *ModuleError) Error() string {
 	if v, ok := e.Err.(*InvalidVersionError); ok {
 		return fmt.Sprintf("%s@%s: invalid %s: %v", e.Path, v.Version, v.noun(), v.Err)
 	}
-	if e.Version != "" {
-		return fmt.Sprintf("%s@%s: %v", e.Path, e.Version, e.Err)
+	if e.ModFilename == "go.mod" {
+		if e.Version != "" {
+			return fmt.Sprintf("%s@%s: %v", e.Path, e.Version, e.Err)
+		}
+		return fmt.Sprintf("module %s: %v", e.Path, e.Err)
 	}
-	return fmt.Sprintf("module %s: %v", e.Path, e.Err)
+	if e.Version != "" {
+		return fmt.Sprintf("(%s) %s@%s: %v", e.ModFilename, e.Path, e.Version, e.Err)
+	}
+	return fmt.Sprintf("module (%s) %s: %v", e.ModFilename, e.Path, e.Err)
 }
 
 func (e *ModuleError) Unwrap() error { return e.Err }

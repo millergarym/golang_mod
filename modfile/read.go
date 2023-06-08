@@ -6,6 +6,7 @@ package modfile
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -920,10 +921,40 @@ var (
 	moduleStr  = []byte("module")
 )
 
-// ModulePath returns the module path from the gomod file text.
+// ModulePath returns the module path from the module file text.
 // If it cannot find a module path, it returns an empty string.
-// It is tolerant of unrelated problems in the go.mod file.
-func ModulePath(mod []byte) string {
+// It is tolerant of unrelated problems in the module file.
+// Assumption is the file is "go.mod".
+// If the file ext is ".json" assume the json is an object (i.e., { ... }, not [] or primitive).
+// If file name is <name.json> assume the path is in an element "module".
+// If the file name is <a.b.penultimate.json> use "penultimate" as the element name.
+func ModulePath(modFilename string, mod []byte) string {
+	if strings.HasSuffix(modFilename, ".json") {
+		parts := strings.Split(modFilename, ".")
+		if len(parts) > 2 {
+			return modPathFromJson(parts[len(parts)-2], mod)
+		} else {
+			return modPathFromJson("module", mod)
+		}
+	}
+	return modPathFromMod(mod)
+}
+
+func modPathFromJson(field string, mod []byte) string {
+	var val map[string]any
+	err := json.Unmarshal(mod, &val)
+	if err != nil {
+		return ""
+	}
+	if v, ok := val[field]; ok {
+		if path, ok := v.(string); ok {
+			return path
+		}
+	}
+	return ""
+}
+
+func modPathFromMod(mod []byte) string {
 	for len(mod) > 0 {
 		line := mod
 		mod = nil
