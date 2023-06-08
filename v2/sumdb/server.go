@@ -11,9 +11,9 @@ import (
 	"os"
 	"strings"
 
-	"golang.org/x/mod/internal/lazyregexp"
-	"golang.org/x/mod/module"
-	"golang.org/x/mod/sumdb/tlog"
+	"golang.org/x/mod/v2/internal/lazyregexp"
+	"golang.org/x/mod/v2/module"
+	"golang.org/x/mod/v2/sumdb/tlog"
 )
 
 // A ServerOps provides the external operations
