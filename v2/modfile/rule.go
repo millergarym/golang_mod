@@ -437,13 +437,13 @@ func (f *File) add(errs *ErrorList, block *LineBlock, line *Line, verb string, a
 		}
 		if verb == "require" {
 			f.Require = append(f.Require, &Require{
-				Mod:      module.Version{Path: s, Version: v},
+				Mod:      module.Version{Path: s, ModFilename: "go.mod", Version: v},
 				Syntax:   line,
 				Indirect: isIndirect(line),
 			})
 		} else {
 			f.Exclude = append(f.Exclude, &Exclude{
-				Mod:    module.Version{Path: s, Version: v},
+				Mod:    module.Version{Path: s, ModFilename: "go.mod", Version: v},
 				Syntax: line,
 			})
 		}
@@ -559,8 +559,8 @@ func parseReplace(filename string, line *Line, verb string, args []string, fix V
 		}
 	}
 	return &Replace{
-		Old:    module.Version{Path: s, Version: v},
-		New:    module.Version{Path: ns, Version: nv},
+		Old:    module.Version{Path: s, ModFilename: "go.mod", Version: v},
+		New:    module.Version{Path: ns, ModFilename: "go.mod", Version: nv},
 		Syntax: line,
 	}, nil
 }
@@ -1056,7 +1056,7 @@ func (f *File) AddRequire(path, vers string) error {
 func (f *File) AddNewRequire(path, vers string, indirect bool) {
 	line := f.Syntax.addLine(nil, "require", AutoQuote(path), vers)
 	r := &Require{
-		Mod:    module.Version{Path: path, Version: vers},
+		Mod:    module.Version{Path: path, ModFilename: "go.mod", Version: vers},
 		Syntax: line,
 	}
 	r.setIndirect(indirect)
@@ -1358,7 +1358,7 @@ func (f *File) AddExclude(path, vers string) error {
 		}
 	}
 
-	f.Exclude = append(f.Exclude, &Exclude{Mod: module.Version{Path: path, Version: vers}, Syntax: f.Syntax.addLine(hint, "exclude", AutoQuote(path), vers)})
+	f.Exclude = append(f.Exclude, &Exclude{Mod: module.Version{Path: path, ModFilename: "go.mod", Version: vers}, Syntax: f.Syntax.addLine(hint, "exclude", AutoQuote(path), vers)})
 	return nil
 }
 
@@ -1378,8 +1378,8 @@ func (f *File) AddReplace(oldPath, oldVers, newPath, newVers string) error {
 
 func addReplace(syntax *FileSyntax, replace *[]*Replace, oldPath, oldVers, newPath, newVers string) error {
 	need := true
-	old := module.Version{Path: oldPath, Version: oldVers}
-	new := module.Version{Path: newPath, Version: newVers}
+	old := module.Version{Path: oldPath, ModFilename: "go.mod", Version: oldVers}
+	new := module.Version{Path: newPath, ModFilename: "go.mod", Version: newVers}
 	tokens := []string{"replace", AutoQuote(oldPath)}
 	if oldVers != "" {
 		tokens = append(tokens, oldVers)

@@ -87,7 +87,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			reportError(w, err)
 			return
 		}
-		id, err := s.ops.Lookup(ctx, module.Version{Path: path, Version: vers})
+		id, err := s.ops.Lookup(ctx, module.Version{Path: path, ModFilename: "go.mod", Version: vers})
 		if err != nil {
 			reportError(w, err)
 			return

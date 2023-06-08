@@ -1,4 +1,4 @@
-module golang.org/x/mod
+module golang.org/x/mod/v2
 
 go 1.20
 
